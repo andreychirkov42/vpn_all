@@ -10,18 +10,8 @@ import ProfileScreen, { type ProfileModal } from './screens/ProfileScreen'
 import PromoModal from './components/PromoModal'
 import ReferralModal from './components/ReferralModal'
 import { useSubscriptions } from './hooks/useSubscriptions'
-import { initTelegram, haptic, openBot, getInitData } from './lib/telegram'
-import { BOT_USERNAME } from './data'
-import { IconRocket } from './icons'
+import { initTelegram, haptic } from './lib/telegram'
 import type { Subscription } from './lib/types'
-
-// Нет контекста Telegram = нечем авторизоваться (мини-апп открыт вне Telegram
-// либо запущен так, что initData не пришёл и нет сохранённого). Только в этом
-// случае показываем экран «Откройте через бота» — иначе это сетевая/панельная
-// ошибка, и нужно показать её текст с кнопкой «Повторить», а не тупик.
-function isNoTelegramContext(): boolean {
-  return getInitData() === ''
-}
 
 export default function App() {
   const [tab, setTab] = useState<Tab>('home')
@@ -64,12 +54,7 @@ export default function App() {
       <Sidebar active={tab} onChange={setTab} onOpenModal={setProfileModal} />
       <main className={`content ${tab === 'home' ? 'content--center' : ''}`}>
         {loading && <CenterMsg text="Загрузка…" />}
-        {!loading && error &&
-          (isNoTelegramContext() ? (
-            <NeedTelegram />
-          ) : (
-            <CenterMsg text={`Ошибка: ${error}`} onRetry={reload} />
-          ))}
+        {!loading && error && <CenterMsg text={`Ошибка: ${error}`} onRetry={reload} />}
         {!loading && !error && tab === 'home' && (
           <HomeScreen
             sub={subs.find((s) => !s.expired) ?? null}
@@ -106,26 +91,6 @@ export default function App() {
       )}
       {profileModal === 'promo' && <PromoModal onClose={() => setProfileModal(null)} />}
       {profileModal === 'referral' && <ReferralModal onClose={() => setProfileModal(null)} />}
-    </div>
-  )
-}
-
-// Экран при запуске вне Telegram: мини-апп получает подписанный initData только
-// внутри Telegram, поэтому просим открыть кабинет через бота.
-function NeedTelegram() {
-  return (
-    <div className="center-msg need-tg">
-      <span className="need-tg__ic">
-        <IconRocket size={40} />
-      </span>
-      <h2 className="need-tg__title">Откройте через Telegram</h2>
-      <p className="need-tg__text">
-        Кабинет работает внутри Telegram. Запустите его заново через бота — по кнопке
-        «Кабинет» или меню-кнопке.
-      </p>
-      <button className="btn btn-primary btn-lg" onClick={() => openBot(BOT_USERNAME)}>
-        Открыть бота
-      </button>
     </div>
   )
 }
