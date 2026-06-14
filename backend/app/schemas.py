@@ -1,0 +1,98 @@
+"""Response models the frontend consumes (decoupled from Remnawave's raw shape)."""
+
+from __future__ import annotations
+
+from typing import Any
+
+from pydantic import BaseModel, Field
+
+
+class Subscription(BaseModel):
+    id: str  # shortUuid — stable public id used by the frontend
+    uuid: str  # full uuid — used for actions (renew/config)
+    label: str  # "Основная" / "Подписка #100564"
+    name: str  # tariff: "Pro" / "Whitelist"
+    status: str  # ACTIVE | DISABLED | LIMITED | EXPIRED
+    pro: bool
+
+    used_traffic_bytes: int
+    traffic_limit_bytes: int  # 0 = unlimited
+    traffic_text: str | None  # "0/5 GB" or None when unlimited
+
+    expire_at: str  # ISO
+    expire_text: str  # "14.06.2026"
+    expired: bool
+
+    devices_used: int
+    device_limit: int  # 0 = unlimited
+    devices_text: str  # "0/∞ устройств"
+
+    subscription_url: str
+
+
+class MeResponse(BaseModel):
+    telegram_id: int
+    subscriptions: list[Subscription]
+    is_admin: bool = False
+
+
+class RemnawaveStatusResponse(BaseModel):
+    ok: bool
+    mock: bool
+    base_url: str
+    api_base: str
+    auth_mode: str
+    stats: dict[str, Any] | list[Any] | None = None
+
+
+class RemnawaveUserLookupResponse(BaseModel):
+    telegram_id: int
+    count: int
+    subscriptions: list[Subscription]
+
+
+class ConfigResponse(BaseModel):
+    subscription_url: str
+
+
+class SupportRequest(BaseModel):
+    message: str = Field(min_length=1, max_length=2000)
+    # None → создать новое обращение; иначе — дописать в существующий тикет юзера
+    ticket_id: int | None = None
+
+
+class SupportResponse(BaseModel):
+    ok: bool
+    ticket_id: int
+
+
+class TicketMessage(BaseModel):
+    id: int
+    author: str  # user | admin
+    text: str
+    created_at: str
+
+
+class Ticket(BaseModel):
+    id: int
+    status: str  # open | answered | closed
+    created_at: str
+    updated_at: str
+    last_message: str | None = None
+    last_author: str | None = None
+    # заполняется только в админских ответах — кто автор обращения
+    user_telegram_id: int | None = None
+    username: str | None = None
+    first_name: str | None = None
+
+
+class TicketDetail(Ticket):
+    messages: list[TicketMessage] = Field(default_factory=list)
+
+
+class TicketListResponse(BaseModel):
+    tickets: list[Ticket]
+
+
+class AdminReplyRequest(BaseModel):
+    message: str = Field(min_length=1, max_length=2000)

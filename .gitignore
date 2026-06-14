@@ -1,0 +1,31 @@
+node_modules/
+dist/
+dist-ssr/
+screenshots/
+*.zip
+
+.env
+.env.*
+!.env.example
+!**/.env.example
+*.local
+
+.venv/
+__pycache__/
+*.py[cod]
+
+# SQLite-хранилище обращений (локальный dev) и WAL-файлы
+*.db
+*.db-shm
+*.db-wal
+.pytest_cache/
+*$py.class
+
+*.tsbuildinfo
+.DS_Store
+*.log
+WORK_CONTEXT.md
+
+# Архив старого статического зеркала (тяжёлые .exe) и реф-скрин
+_archive_mirror/
+скрин.jpg
